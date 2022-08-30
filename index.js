@@ -52,5 +52,5 @@ app.use((err, req, res, next) => {
 
 // Слушаем порт
 app.listen(PORT, () => {
-  console.log('all is right', allowedCors);
+  console.log('all is right');
 });
