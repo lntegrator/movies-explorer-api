@@ -20,9 +20,8 @@ module.exports.getMovies = (req, res, next) => {
 // Создаем фильм
 module.exports.createMovie = (req, res, next) => {
   const userId = req.user._id;
-  const movieInfo = req.body;
 
-  Movie.create({ owner: userId, movieInfo })
+  Movie.create({ owner: userId, ...req.body })
     .then((movie) => {
       res.send(movie);
     })

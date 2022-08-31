@@ -1,3 +1,4 @@
+require('dotenv').config();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -14,7 +15,7 @@ module.exports.createUser = (req, res, next) => {
     .then((hash) => {
       User.create({ name, email, password: hash })
         .then((user) => {
-          res.status(201).send({ name, email, _id: user._id });
+          res.send({ name, email, _id: user._id });
         })
         .catch((err) => {
           if (err.name === 'ValidationError') {
@@ -25,7 +26,7 @@ module.exports.createUser = (req, res, next) => {
           }
           return next(err);
         });
-    });
+    }).catch(next);
 };
 
 // Логин пользователя
@@ -49,7 +50,7 @@ module.exports.login = (req, res, next) => {
 module.exports.getUserInfo = (req, res, next) => {
   User.findById(req.user._id)
     .then((user) => {
-      res.send(user);
+      res.send({ name: user.name, email: user.email, _id: user._id });
     })
     .catch(next);
 };
@@ -57,16 +58,23 @@ module.exports.getUserInfo = (req, res, next) => {
 // Обновляем данные пользователя (имя, почта)
 module.exports.updateUserInfo = (req, res, next) => {
   const { name, email } = req.body;
-  User.findOneAndUpdate({ id: req.user._id }, { name, email }, { new: true, runValidators: true })
+  User.findOneAndUpdate(
+    { id: req.user._id },
+    { name, email },
+    { new: true, runValidators: true, upsert: false },
+  )
     .then((user) => {
       if (!user) {
         throw new NotFoundError('Данного пользователя не существует');
       }
-      res.send(user);
+      res.send({ name: user.name, email: user.email, _id: user._id });
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
         return next(new BadRequest('Переданы некорректные данные при обновлении профиля.'));
+      }
+      if (err.code === 11000) {
+        return next(new Conflict('Данный email уже зарегистрирован.'));
       }
       return next(err);
     });
