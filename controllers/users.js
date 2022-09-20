@@ -58,7 +58,7 @@ module.exports.getUserInfo = (req, res, next) => {
 // Обновляем данные пользователя (имя, почта)
 module.exports.updateUserInfo = (req, res, next) => {
   const { name, email } = req.body;
-  User.findOneAndUpdate(
+  User.findByIdAndUpdate(
     { id: req.user._id },
     { name, email },
     { new: true, runValidators: true, upsert: false },
